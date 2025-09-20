@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>广告投放数据分析工具</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+
+        .header {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-title {
+            color: #dc3545;
+            font-weight: bold;
+            font-size: 18px;
+            text-align: center;
+            flex: 1;
+        }
+
+        .new-btn {
+            background-color: #333;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .new-btn:hover {
+            background-color: #555;
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .left-section {
+            width: 100%;
+        }
+
+        .right-section {
+            width: 100%;
+        }
+
+        .section {
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .record-section {
+            background-color: white;
+            padding: 15px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            overflow-x: auto;
+        }
+
+        .record-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .record-header {
+            background-color: #e9ecef;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .record-header th {
+            padding: 8px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: bold;
+            color: #333;
+            border-right: 1px solid #ddd;
+        }
+
+        .record-header th:last-child {
+            border-right: none;
+        }
+
+        .record-item {
+            border-bottom: 1px solid #eee;
+        }
+
+        .record-item:last-child {
+            border-bottom: none;
+        }
+
+        .record-item td {
+            padding: 8px;
+            border-right: 1px solid #eee;
+        }
+
+        .record-item td:last-child {
+            border-right: none;
+        }
+
+        .record-item input {
+            width: 100%;
+            padding: 6px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 12px;
+            box-sizing: border-box;
+        }
+
+        .record-item input:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+
+        .add-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        .add-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .dashboard-section {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+
+        .campaign-group {
+            margin-bottom: 20px;
+        }
+
+        .campaign-name {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .dashboard-header {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 30px;
+            gap: 10px;
+            padding: 8px;
+            background-color: #e9ecef;
+            border-bottom: 2px solid #ddd;
+            align-items: center;
+            font-size: 12px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .data-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 30px;
+            gap: 10px;
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            align-items: center;
+            font-size: 12px;
+        }
+
+        .data-row:last-child {
+            border-bottom: none;
+        }
+
+        .data-row input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+        }
+
+        .analysis-section {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+
+        .analysis-content {
+            display: flex;
+            gap: 20px;
+            background-color: transparent;
+            padding: 15px;
+            border-radius: 4px;
+            color: black;
+        }
+
+        .analysis-data {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .analysis-chart {
+            flex: 1;
+            min-width: 250px;
+            background-color: white;
+            border-radius: 4px;
+            padding: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 200px;
+            width: 100%;
+        }
+
+        .analysis-time {
+            text-align: left;
+            margin-bottom: 15px;
+            font-weight: bold;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .analysis-item {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 14px;
+            gap: 15px;
+        }
+
+        .analysis-item span:first-child {
+            min-width: 70px;
+            text-align: left;
+        }
+
+        .analysis-item span:last-child {
+            text-align: left;
+        }
+
+        .trend-up {
+            color: #28a745;
+        }
+
+        .trend-down {
+            color: #dc3545;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 300px;
+            text-align: center;
+        }
+
+        .modal input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .modal-buttons {
+            margin-top: 15px;
+        }
+
+        .modal-btn {
+            padding: 8px 16px;
+            margin: 0 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .modal-btn.ok {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .modal-btn.cancel {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: white;
+            min-width: 250px;
+            max-width: 300px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1000;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            margin-top: 5px;
+        }
+
+        .dropdown-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            cursor: pointer;
+            white-space: nowrap;
+            word-wrap: break-word;
+        }
+
+        .dropdown-content a:hover {
+            background-color: #f1f1f1;
+        }
+
+        .show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button class="new-btn" onclick="showNewCampaignModal()">New</button>
+            <div class="page-title">努力学习，找找感觉</div>
+            <div></div>
+        </div>
+
+        <div class="main-content">
+            <div class="left-section">
+                <div class="section">
+                    <div class="section-title">Record</div>
+                    <div class="record-section">
+                        <div class="dropdown">
+                            <button class="add-btn" onclick="showAddRecordDropdown()">+</button>
+                            <div id="addRecordDropdown" class="dropdown-content"></div>
+                        </div>
+                        <table class="record-table">
+                            <thead class="record-header">
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Spend</th>
+                                    <th>Revenue</th>
+                                    <th>CV</th>
+                                    <th>CPA</th>
+                                    <th>AOV</th>
+                                    <th>ROI</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recordItems">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">Dashboard</div>
+                    <div class="dashboard-section">
+                        <div id="dashboardContent"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-section">
+                <div class="section">
+                    <div class="section-title">Analysis</div>
+                    <div class="analysis-section">
+                        <div class="analysis-content" id="analysisContent">
+                            <div class="analysis-data" id="analysisData">
+                                <div style="text-align: center; color: #666;">请选择两条数据进行对比分析</div>
+                            </div>
+                            <div class="analysis-chart">
+                                <h4 style="text-align: center; margin-bottom: 10px; color: #333;">数据对比柱状图</h4>
+                                <div class="chart-container">
+                                    <canvas id="barChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="analysis-chart">
+                                <h4 style="text-align: center; margin-bottom: 10px; color: #333;">趋势曲线图</h4>
+                                <div class="chart-container">
+                                    <canvas id="lineChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Campaign Modal -->
+    <div id="newCampaignModal" class="modal">
+        <div class="modal-content">
+            <h3>新建Campaign</h3>
+            <input type="text" id="campaignNameInput" placeholder="请输入Campaign名称">
+            <div class="modal-buttons">
+                <button class="modal-btn ok" onclick="createNewCampaign()">OK</button>
+                <button class="modal-btn cancel" onclick="closeNewCampaignModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        // 全局数据存储
+        let campaigns = [];
+        let records = [];
+        let selectedRecords = [];
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            updateDashboard();
+        });
+
+        // 显示新建Campaign弹窗
+        function showNewCampaignModal() {
+            document.getElementById('newCampaignModal').style.display = 'block';
+            document.getElementById('campaignNameInput').focus();
+        }
+
+        // 关闭新建Campaign弹窗
+        function closeNewCampaignModal() {
+            document.getElementById('newCampaignModal').style.display = 'none';
+            document.getElementById('campaignNameInput').value = '';
+        }
+
+        // 创建新Campaign
+        function createNewCampaign() {
+            const campaignName = document.getElementById('campaignNameInput').value.trim();
+            if (campaignName && !campaigns.includes(campaignName)) {
+                campaigns.push(campaignName);
+                addNewRecord(campaignName);
+                closeNewCampaignModal();
+            } else if (campaigns.includes(campaignName)) {
+                alert('该Campaign名称已存在！');
+            } else {
+                alert('请输入有效的Campaign名称！');
+            }
+        }
+
+        // 显示添加记录下拉菜单
+        function showAddRecordDropdown() {
+            const dropdown = document.getElementById('addRecordDropdown');
+            dropdown.innerHTML = '';
+            
+            if (campaigns.length === 0) {
+                const item = document.createElement('a');
+                item.textContent = '暂无Campaign，请先点击New创建';
+                item.style.color = '#999';
+                item.style.cursor = 'default';
+                item.onclick = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                };
+                dropdown.appendChild(item);
+            } else {
+                campaigns.forEach(campaign => {
+                    const item = document.createElement('a');
+                    item.textContent = campaign;
+                    item.onclick = () => {
+                        addNewRecord(campaign);
+                        dropdown.classList.remove('show');
+                    };
+                    dropdown.appendChild(item);
+                });
+            }
+            
+            dropdown.classList.add('show');
+        }
+
+        // 添加新记录
+        function addNewRecord(campaignName) {
+            const recordId = Date.now();
+            const record = {
+                id: recordId,
+                campaignName: campaignName,
+                spend: '',
+                revenue: '',
+                cv: '',
+                cpa: '',
+                aov: '',
+                roi: '',
+                notes: '',
+                timestamp: new Date()
+            };
+            
+            records.push(record);
+            renderRecordItems();
+        }
+
+        // 渲染记录项
+        function renderRecordItems() {
+            const container = document.getElementById('recordItems');
+            container.innerHTML = '';
+            
+            // 按campaign名称分组
+            const groupedRecords = {};
+            records.forEach(record => {
+                if (!groupedRecords[record.campaignName]) {
+                    groupedRecords[record.campaignName] = [];
+                }
+                groupedRecords[record.campaignName].push(record);
+            });
+            
+            // 按campaign名称排序，然后渲染每个组
+            const sortedCampaigns = Object.keys(groupedRecords).sort();
+            
+            sortedCampaigns.forEach(campaignName => {
+                // 在每个组内按时间排序
+                const sortedRecords = groupedRecords[campaignName].sort((a, b) => a.timestamp - b.timestamp);
+                
+                sortedRecords.forEach(record => {
+                    const row = document.createElement('tr');
+                    row.className = 'record-item';
+                    row.innerHTML = `
+                        <td><input type="text" placeholder="name" value="${record.campaignName}" readonly></td>
+                        <td><input type="number" placeholder="spend" value="${record.spend}" onchange="updateRecord(${record.id}, 'spend', this.value)"></td>
+                        <td><input type="number" placeholder="revenue" value="${record.revenue}" onchange="updateRecord(${record.id}, 'revenue', this.value)"></td>
+                        <td><input type="number" placeholder="cv" value="${record.cv}" onchange="updateRecord(${record.id}, 'cv', this.value)"></td>
+                        <td><input type="number" placeholder="cpa" value="${record.cpa}" readonly></td>
+                        <td><input type="number" placeholder="aov" value="${record.aov}" readonly></td>
+                        <td><input type="number" placeholder="roi" value="${record.roi}" readonly></td>
+                        <td><input type="text" placeholder="Notes" value="${record.notes}" onchange="updateRecord(${record.id}, 'notes', this.value)"></td>
+                    `;
+                    container.appendChild(row);
+                });
+            });
+        }
+
+        // 更新记录
+        function updateRecord(recordId, field, value) {
+            const record = records.find(r => r.id === recordId);
+            if (record) {
+                record[field] = value;
+                
+                // 自动计算cpa, aov, roi
+                if (field === 'spend' || field === 'revenue' || field === 'cv') {
+                    calculateMetrics(record);
+                }
+                
+                renderRecordItems();
+                updateDashboard();
+            }
+        }
+
+        // 计算指标
+        function calculateMetrics(record) {
+            const spend = parseFloat(record.spend) || 0;
+            const revenue = parseFloat(record.revenue) || 0;
+            const cv = parseFloat(record.cv) || 0;
+            
+            // CPA = Spend / CV
+            record.cpa = cv > 0 ? (spend / cv).toFixed(2) : '0';
+            
+            // AOV = Revenue / CV
+            record.aov = cv > 0 ? (revenue / cv).toFixed(2) : '0';
+            
+            // ROI = (Revenue - Spend) / Spend * 100
+            record.roi = spend > 0 ? (((revenue - spend) / spend) * 100).toFixed(2) : '0';
+        }
+
+        // 更新Dashboard
+        function updateDashboard() {
+            const container = document.getElementById('dashboardContent');
+            container.innerHTML = '';
+            
+            // 按campaign分组
+            const groupedRecords = {};
+            records.forEach(record => {
+                if (record.spend && record.revenue && record.cv) {
+                    if (!groupedRecords[record.campaignName]) {
+                        groupedRecords[record.campaignName] = [];
+                    }
+                    groupedRecords[record.campaignName].push(record);
+                }
+            });
+            
+            // 渲染每个campaign的数据
+            Object.keys(groupedRecords).forEach(campaignName => {
+                const campaignDiv = document.createElement('div');
+                campaignDiv.className = 'campaign-group';
+                
+                const titleDiv = document.createElement('div');
+                titleDiv.className = 'campaign-name';
+                titleDiv.textContent = campaignName;
+                campaignDiv.appendChild(titleDiv);
+                
+                // 添加表头
+                const headerDiv = document.createElement('div');
+                headerDiv.className = 'dashboard-header';
+                headerDiv.innerHTML = `
+                    <span>时间</span>
+                    <span>Spend</span>
+                    <span>Revenue</span>
+                    <span>CV</span>
+                    <span>CPA</span>
+                    <span>AOV</span>
+                    <span>ROI</span>
+                    <span></span>
+                    <span></span>
+                `;
+                campaignDiv.appendChild(headerDiv);
+                
+                // 按时间排序
+                const sortedRecords = groupedRecords[campaignName].sort((a, b) => a.timestamp - b.timestamp);
+                
+                sortedRecords.forEach(record => {
+                    const rowDiv = document.createElement('div');
+                    rowDiv.className = 'data-row';
+                    rowDiv.innerHTML = `
+                        <span>${formatDateTime(record.timestamp)}</span>
+                        <span>$${record.spend}</span>
+                        <span>$${record.revenue}</span>
+                        <span>${record.cv}</span>
+                        <span>${record.cpa}</span>
+                        <span>${record.aov}</span>
+                        <span>${record.roi}%</span>
+                        <span></span>
+                        <input type="checkbox" onchange="toggleRecordSelection(${record.id}, this.checked)">
+                    `;
+                    campaignDiv.appendChild(rowDiv);
+                });
+                
+                container.appendChild(campaignDiv);
+            });
+        }
+
+        // 切换记录选择
+        function toggleRecordSelection(recordId, checked) {
+            if (checked) {
+                if (selectedRecords.length >= 2) {
+                    // 如果已选择2条，取消第一条的选择
+                    const firstSelected = selectedRecords[0];
+                    selectedRecords = [selectedRecords[1], recordId];
+                    // 更新checkbox状态
+                    document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                        if (cb.onchange.toString().includes(firstSelected)) {
+                            cb.checked = false;
+                        }
+                    });
+                } else {
+                    selectedRecords.push(recordId);
+                }
+            } else {
+                selectedRecords = selectedRecords.filter(id => id !== recordId);
+            }
+            
+            updateAnalysis();
+        }
+
+        // 全局图表变量
+        let barChart = null;
+        let lineChart = null;
+
+        // 更新分析
+        function updateAnalysis() {
+            const analysisData = document.getElementById('analysisData');
+            
+            if (selectedRecords.length !== 2) {
+                analysisData.innerHTML = '<div style="text-align: center; color: #666;">请选择两条数据进行对比分析</div>';
+                // 清除图表
+                if (barChart) {
+                    barChart.destroy();
+                    barChart = null;
+                }
+                if (lineChart) {
+                    lineChart.destroy();
+                    lineChart = null;
+                }
+                return;
+            }
+            
+            const record1 = records.find(r => r.id === selectedRecords[0]);
+            const record2 = records.find(r => r.id === selectedRecords[1]);
+            
+            if (!record1 || !record2) return;
+            
+            // 计算时间差
+            const timeDiff = Math.abs(record2.timestamp - record1.timestamp);
+            const hours = Math.floor(timeDiff / (1000 * 60 * 60));
+            const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+            const timeText = hours > 0 ? `${hours}小时` : `${minutes}分钟`;
+            
+            // 计算各项指标的变化
+            const metrics = ['spend', 'revenue', 'cv', 'cpa', 'aov', 'roi'];
+            const metricLabels = ['Spend', 'Revenue', 'CV', 'CPA', 'AOV', 'ROI'];
+            const metricValues = [
+                [parseFloat(record1.spend), parseFloat(record2.spend)],
+                [parseFloat(record1.revenue), parseFloat(record2.revenue)],
+                [parseFloat(record1.cv), parseFloat(record2.cv)],
+                [parseFloat(record1.cpa), parseFloat(record2.cpa)],
+                [parseFloat(record1.aov), parseFloat(record2.aov)],
+                [parseFloat(record1.roi), parseFloat(record2.roi)]
+            ];
+            
+            let analysisHTML = `<div class="analysis-time">在 ${timeText} 内：</div>`;
+            
+            metrics.forEach((metric, index) => {
+                const [oldValue, newValue] = metricValues[index];
+                const change = ((newValue - oldValue) / oldValue) * 100;
+                const isIncrease = change > 0;
+                const arrow = isIncrease ? '↑' : '↓';
+                const changeText = `${Math.abs(change).toFixed(2)}% ${arrow}`;
+                
+                // 根据指标类型确定颜色
+                let colorClass = '';
+                if (['spend', 'cpa'].includes(metric)) {
+                    colorClass = isIncrease ? 'trend-down' : 'trend-up'; // spend和cpa上升是警示(红色)，下降是利好(绿色)
+                } else {
+                    colorClass = isIncrease ? 'trend-up' : 'trend-down'; // 其他指标上升是利好(绿色)，下降是警示(红色)
+                }
+                
+                analysisHTML += `
+                    <div class="analysis-item">
+                        <span>${metricLabels[index]}:</span>
+                        <span class="${colorClass}">${changeText}</span>
+                    </div>
+                `;
+            });
+            
+            analysisData.innerHTML = analysisHTML;
+            
+            // 更新图表
+            updateCharts(metricLabels, metricValues, record1, record2);
+        }
+
+        // 更新图表
+        function updateCharts(labels, values, record1, record2) {
+            // 销毁现有图表
+            if (barChart) {
+                barChart.destroy();
+            }
+            if (lineChart) {
+                lineChart.destroy();
+            }
+            
+            // 创建柱状图
+            const barCtx = document.getElementById('barChart').getContext('2d');
+            barChart = new Chart(barCtx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '数据1',
+                        data: values.map(v => v[0]),
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }, {
+                        label: '数据2',
+                        data: values.map(v => v[1]),
+                        backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+            
+            // 创建曲线图
+            const lineCtx = document.getElementById('lineChart').getContext('2d');
+            lineChart = new Chart(lineCtx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '数据1',
+                        data: values.map(v => v[0]),
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }, {
+                        label: '数据2',
+                        data: values.map(v => v[1]),
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // 格式化日期时间
+        function formatDateTime(timestamp) {
+            const date = new Date(timestamp);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${year}/${month}/${day} ${hours}:${minutes}`;
+        }
+
+        // 点击外部关闭下拉菜单
+        window.onclick = function(event) {
+            if (!event.target.matches('.add-btn')) {
+                const dropdown = document.getElementById('addRecordDropdown');
+                if (dropdown.classList.contains('show')) {
+                    dropdown.classList.remove('show');
+                }
+            }
+        }
+    </script>
+</body>
+</html>
